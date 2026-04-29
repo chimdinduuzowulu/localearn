@@ -1,0 +1,56 @@
+{
+  "short_name": "Naija Learn",
+  "name": "Naija Learn",
+  "description": "The Wootlab Foundation's offline learning app, with PWA capabilities, facilitates learning in Nigerian native languages, even without internet connectivity.",
+  "icons": [
+    {
+      "src": "/assets/img/wootlab-logo-1.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-2.png",
+      "type": "image/png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-3.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-4.png",
+      "type": "image/png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-5.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-6.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+    "screenshots": [
+    {
+      "src": "/assets/img/wootlab-logo-square.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/assets/img/wootlab-logo-6.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "orientation": "portrait"
+}
