@@ -1,0 +1,120 @@
+import { ICourses } from "../../../src/interfaces/ICourses";
+
+export const CoursesData: ICourses[] = [
+  {
+    courseName: "LAFIYA DA GINDI",
+    translate: "(HEALTH AND NUTRITION)",
+    courseSubModule: 1,
+    courseTotalModule: 2,
+    videoLinks: [
+      "https://www.youtube.com/watch?v=Pdr_EbD92S4",
+      "https://youtu.be/GkDgNvjGMUs",
+    ],
+    offlineLinks: [
+      "/assets/videos/HEALTH-AND-NUTRITION/PROMOTING FAMILY AND COMMUNITY HEALTH.mp4",
+      "/assets/videos/HEALTH-AND-NUTRITION/PROMOTING THE HEALTH OF THE CHILD.mp4",
+    ],
+    svgdPath:
+      "M12 2C10.348 2 9 3.348 9 5s1.348 3 3 3 3-1.348 3-3S13.652 2 12 2zm0 2c.552 0 1 .448 1 1s-.448 1-1 1-1-.448-1-1 .448-1 1-1zm-2 7.5C8.567 9.5 6 12.067 6 15.5S8.567 21.5 12 21.5 18 18.933 18 15.5 15.433 9.5 12 9.5zm0 2c1.933 0 3.5 1.567 3.5 3.5S13.933 18.5 12 18.5 8.5 16.933 8.5 15.5 10.067 11.5 12 11.5zm-1 4.5c-.276 0-.5.224-.5.5s.224.5.5.5.5-.224.5-.5-.224-.5-.5-.5zm6 0c-.276 0-.5.224-.5.5s.224.5.5.5.5-.224.5-.5-.224-.5-.5-.5zM9 3H3V1h6v2zM3 21h6v2H3v-2zm18-9h-6v-2h6v2z",
+  },
+  {
+    courseName: "CANJIN NONO DA YANAYI",
+    translate: "(AGRICULTURE AND CLIMATE CHANGE)",
+    courseSubModule: 1,
+    courseTotalModule: 3,
+    videoLinks: [
+      "https://youtu.be/5xjY-BJaaEo",
+      "https://youtu.be/N-Qea5m-Sz4",
+      "https://youtu.be/oD2W5EzoLak",
+    ],
+    offlineLinks: [
+      "/assets/videos/AGRICULTURE-AND-CLIMATE-CHANGE/AGRICULTURE FOR CHILDREN.mp4",
+      "/assets/videos/AGRICULTURE-AND-CLIMATE-CHANGE/FOOD AND NUTRIENTS.mp4",
+      "/assets/videos/AGRICULTURE-AND-CLIMATE-CHANGE/WHEN FOOD LACKS NUTRIENTS.mp4",
+    ],
+    svgdPath:
+      "M12 2C12.8284 2 13.5 2.67157 13.5 3.5C13.5 4.32843 12.8284 5 12 5C11.1716 5 10.5 4.32843 10.5 3.5C10.5 2.67157 11.1716 2 12 2ZM4.22183 6.22183C4.79238 5.65128 5.70761 5.65128 6.27816 6.22183C6.84871 6.79238 6.84871 7.70761 6.27816 8.27816C5.70761 8.84871 4.79238 8.84871 4.22183 8.27816C3.65128 7.70761 3.65128 6.79238 4.22183 6.22183ZM19.7782 6.22183C20.3487 5.65128 21.2639 5.65128 21.8344 6.22183C22.405 6.79238 22.405 7.70761 21.8344 8.27816C21.2639 8.84871 20.3487 8.84871 19.7782 8.27816C19.2076 7.70761 19.2076 6.79238 19.7782 6.22183ZM12 8C13.6569 8 15 9.34315 15 11C15 12.6569 13.6569 14 12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8ZM12 16C9.23858 16 7 18.2386 7 21H5C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21H17C17 18.2386 14.7614 16 12 16ZM4.5 12.5C3.94772 12.5 3.5 12.9477 3.5 13.5V14.5C3.5 15.0523 3.94772 15.5 4.5 15.5H5.5C6.05228 15.5 6.5 15.0523 6.5 14.5V13.5C6.5 12.9477 6.05228 12.5 5.5 12.5H4.5ZM18.5 12.5C17.9477 12.5 17.5 12.9477 17.5 13.5V14.5C17.5 15.0523 17.9477 15.5 18.5 15.5H19.5C20.0523 15.5 20.5 15.0523 20.5 14.5V13.5C20.5 12.9477 20.0523 12.5 19.5 12.5H18.5ZM12 5C12 5.55228 12.4477 6 13 6H14C14.5523 6 15 5.55228 15 5V4C15 3.44772 14.5523 3 14 3H13C12.4477 3 12 3.44772 12 4V5ZM11 5C11 4.44772 10.5523 4 10 4H9C8.44772 4 8 4.44772 8 5V6C8 6.55228 8.44772 7 9 7H10C10.5523 7 11 6.55228 11 6V5ZM15.5 3C15.2239 3 15 3.22386 15 3.5V4.5C15 4.77614 15.2239 5 15.5 5H16.5C16.7761 5 17 4.77614 17 4.5V3.5C17 3.22386 16.7761 3 16.5 3H15.5ZM8.5 3C8.22386 3 8 3.22386 8 3.5V4.5C8 4.77614 8.22386 5 8.5 5H9.5C9.77614 5 10 4.77614 10 4.5V3.5C10 3.22386 9.77614 3 9.5 3H8.5Z",
+  },
+  {
+    courseName: "BASIC ILTERACY DA LISSAFI",
+    translate: "(BASIC LITERACY AND NUMERACY)",
+    courseSubModule: 2,
+    courseTotalModule: 16,
+    videoLinks: [
+      "https://drive.google.com/file/d/1seKSRPSE5JeqMFbP-K6zvCfmxpRe75wx/view?usp=sharing",
+      "https://drive.google.com/file/d/1seKSRPSE5JeqMFbP-K6zvCfmxpRe75wx/view?usp=sharing",
+      "https://drive.google.com/file/d/1seKSRPSE5JeqMFbP-K6zvCfmxpRe75wx/view?usp=sharing",
+      "https://drive.google.com/file/d/1seKSRPSE5JeqMFbP-K6zvCfmxpRe75wx/view?usp=sharing",
+    ],
+    offlineLinks: [],
+    svgdPath:
+      "M3 3v18h1v-4.5c0-.276.224-.5.5-.5h7c.276 0 .5.224.5.5V21h1V3H3zm1 0h8v9.5h-1V9c0-.276-.224-.5-.5-.5h-5C5.224 8.5 5 8.724 5 9v3.5H4V3zm5 6.5V9h3v.5H9zm0 2v-.5h3V12H9zm7-5h1v1h-1V6zm2-2h1v1h-1V4zm-3 4h1v1h-1V8zm2 2h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 2h1v1h-1v-1zm-2 2h1v1h-1v-1zm-6 1c.276 0 .5.224.5.5v3h-1v-3c0-.276.224-.5.5-.5z",
+  },
+  {
+    courseName: "ILMIN KASUWANCI DA KUDI ",
+    translate: "(ENTREPRENEURIAL AND FINANCIAL LITERACY)",
+    courseSubModule: 1,
+    courseTotalModule: 16,
+    videoLinks: [
+      "https://youtu.be/ym9P7f8KKSA",
+      "https://youtu.be/ovDI9zuuY4k",
+      "https://youtu.be/0ueAnHSCcdc",
+      "https://youtu.be/psh_XNBVR5I",
+      "https://youtu.be/aNwe9dAmGtk",
+      "https://youtu.be/XpmH1ZeSGbE",
+      "https://youtu.be/7BhUcLVwSgw",
+      "https://youtu.be/pP7GG3l2y5w",
+      "https://youtu.be/Wy6GhJr9pqo",
+      "https://youtu.be/twVvUKW42fQ",
+      "https://youtu.be/lHnFj7WW5DM",
+      "https://youtu.be/HHpiCz596Xw",
+      "https://youtu.be/rbKMD7YKVp0",
+      "https://youtu.be/BOsEqmnH9kI",
+    ],
+    offlineLinks: [],
+    svgdPath:
+      "M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+  },
+  {
+    courseName: "AIKI DA KWAMFUTA",
+    translate: "(WORK WITH COMPUTERS)",
+    courseSubModule: 1,
+    courseTotalModule: 14,
+    videoLinks: [
+      "https://youtu.be/K-Px5fWR5DA",
+      "https://youtu.be/t9R3r0C-Qy8",
+      "https://youtu.be/346fK9P4NyA",
+      "https://youtu.be/mMSn5mpBkFU",
+      "https://youtu.be/LPAhGIJFHaE",
+      "https://youtu.be/ggPG5Q1c7OI",
+      "https://youtu.be/tzdl4Euw0TQ",
+      "https://youtu.be/O6eyykA3cM8",
+      "https://youtu.be/O6eyykA3cM8",
+      "https://youtu.be/h75C7utMFwc",
+      "https://youtu.be/9ANZRbrftXw",
+      "https://youtu.be/Mf09OGX699I",
+      "https://youtu.be/VzSBio2S2J8",
+      "https://youtu.be/hULYXgRzQZk",
+      "https://youtu.be/pEPBByUlIyw",
+    ],
+    offlineLinks: [
+      "/assets/videos/DIGITAL-SKILLS/01-what-is-a-computer.mp4",
+      "/assets/videos/DIGITAL-SKILLS/02-parts-of-a-computer.mp4",
+      "/assets/videos/DIGITAL-SKILLS/04-what-is-an-operating-system.mp4",
+      // "/assets/videos/DIGITAL-SKILLS/05-get-to-know-operating-system.mp4",
+      "/assets/videos/DIGITAL-SKILLS/06-work-with-files-folders.mp4",
+      "/assets/videos/DIGITAL-SKILLS/07-understand-right-click-.mp4",
+      // "/assets/videos/DIGITAL-SKILLS/08-work-with-windows.mp4",
+      // "/assets/videos/DIGITAL-SKILLS/09-personalize-your-desktop.mp4",
+      "/assets/videos/DIGITAL-SKILLS/10-cortana.mp4",
+      "/assets/videos/DIGITAL-SKILLS/11-use-accessablity-features.mp4",
+      "/assets/videos/DIGITAL-SKILLS/12-what-is-an-application.mp4",
+      "/assets/videos/DIGITAL-SKILLS/14-working-with-apps.mp4",
+      "/assets/videos/DIGITAL-SKILLS/15-portable-storage-device.mp4",
+      "/assets/videos/DIGITAL-SKILLS/15-portable-storage-device.mp4",
+    ],
+
+    svgdPath:
+      "M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+  },
+];

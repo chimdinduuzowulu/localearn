@@ -101,9 +101,9 @@ export default function QuizPage() {
   const {
     state,
     currentQuestion,
-    isCorrect,
+    // isCorrect,
     correctCount,
-    allQuestionsAnswered,
+    // allQuestionsAnswered,
     startSession,
     submitAnswer,
     nextQuestion,
@@ -207,6 +207,7 @@ export default function QuizPage() {
     let emoji = "📚";
     let message = "Keep practicing! You'll get better.";
     let gradient = "from-gray-500 to-gray-600";
+    console.log("Quiz complete! Score:", gradient);
 
     if (percentage >= 90) {
       emoji = "🏆";

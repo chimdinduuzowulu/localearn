@@ -225,6 +225,7 @@ function simulateStudyGuide(text: string, lang: SupportedLanguage): { summary: s
   };
 
   const l = labels[lang];
+  console.log(text);
   return { summary: l.summary, keyPoints: l.points };
 }
 

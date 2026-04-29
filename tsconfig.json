@@ -20,7 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Allow JS and JSX files */
+    
     "allowJs": true
   },
   "include": [
@@ -33,5 +33,6 @@
     "workbox-config.cjs",
     "public/assets/data"
   ],
+  "exclude": ["vite.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

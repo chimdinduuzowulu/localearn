@@ -137,37 +137,37 @@ const IconCheckCircle = ({ size = 14, color = "#22C55E" }) => (
   </svg>
 );
 
-const IconXCircle = ({ size = 14, color = "#EF4444" }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
+// const IconXCircle = ({ size = 14, color = "#EF4444" }) => (
+//   <svg
+//     width={size}
+//     height={size}
+//     viewBox="0 0 24 24"
+//     fill="none"
+//     stroke={color}
+//     strokeWidth="2.5"
+//     strokeLinecap="round"
+//     strokeLinejoin="round"
+//   >
+//     <circle cx="12" cy="12" r="10" />
+//     <line x1="18" y1="6" x2="6" y2="18" />
+//     <line x1="6" y1="6" x2="18" y2="18" />
+//   </svg>
+// );
 
-const IconArrowLeft = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
+// const IconArrowLeft = () => (
+//   <svg
+//     width="15"
+//     height="15"
+//     viewBox="0 0 24 24"
+//     fill="none"
+//     stroke="currentColor"
+//     strokeWidth="2.5"
+//     strokeLinecap="round"
+//     strokeLinejoin="round"
+//   >
+//     <polyline points="15 18 9 12 15 6" />
+//   </svg>
+// );
 
 
 const formatFileSize = (bytes?: number) => {
