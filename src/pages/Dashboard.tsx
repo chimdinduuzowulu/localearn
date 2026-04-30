@@ -57,8 +57,8 @@ const IconRefresh = ({ size = 14 }: { size?: number }) => (
 const LANGUAGES = [
   { code: "english", name: "English", flag: "🇬🇧", desc: "International curriculum", available: true },
   { code: "hausa",   name: "Hausa",   flag: "🇳🇬", desc: "Northern Nigeria",        available: true },
-  { code: "igbo",    name: "Igbo",    flag: "🇳🇬", desc: "Coming soon",             available: false },
-  { code: "yoruba",  name: "Yoruba",  flag: "🇳🇬", desc: "Coming soon",             available: false },
+  { code: "igbo",    name: "Igbo",    flag: "🇳🇬", desc: "Eastern Nigeria",         available: true },
+  { code: "yoruba",  name: "Yoruba",  flag: "🇳🇬", desc: "South-West Nigeria",      available: true },
 ];
 
 const COURSES = [

@@ -14,6 +14,7 @@ import _404 from "./pages/404";
 import Blank from "./components/Blank";
 
 import StudentLibrary from "./pages/student/StudentLibrary";
+import VideoTutorials from "./pages/student/VideoTutorials";
 import StudyPage from "./pages/student/StudyPage";
 import QuizPage from "./pages/student/QuizPage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -55,6 +56,7 @@ function App() {
         <Route path="/courses" element={<StudentLibrary />} />
         <Route path="/study/:documentId" element={<StudyPage />} />
         <Route path="/quiz/:documentId" element={<QuizPage />} />
+        <Route path="/videos" element={<VideoTutorials />} />
 
         {/* Teacher portal */}
         <Route path="/teacher" element={<TeacherDashboard />} />
