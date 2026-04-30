@@ -7,6 +7,16 @@ import {
   CurriculumDocument,
   SUPPORTED_LANGUAGES,
 } from "../../utils/curriculum";
+import {
+  getVideosBySubjectAndLanguage,
+  VideoModule,
+} from "../../utils/videoData";
+import {
+  getCourseProgress,
+  isVideoWatched,
+  markVideoWatched,
+} from "../../utils/videoProgress";
+import VideoPlayer from "../../components/VideoPlayer";
 
 const IconArrowLeft = () => (
   <svg
@@ -39,7 +49,13 @@ const IconHome = () => (
   </svg>
 );
 
-const IconChevronRight = ({ size = 12, style }: { size?: number; style?: React.CSSProperties }) => (
+const IconChevronRight = ({
+  size = 12,
+  style,
+}: {
+  size?: number;
+  style?: React.CSSProperties;
+}) => (
   <svg
     width={size}
     height={size}
@@ -186,6 +202,45 @@ const IconTranslate = ({ size = 14, color = "#64748B" }) => (
   </svg>
 );
 
+const IconVideo = ({ size = 16, color = "#0EA5E9" }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="7" width="15" height="10" rx="2" />
+    <polygon fill={color} stroke={color} points="17 9 22 5 22 19 17 15 17 9" />
+  </svg>
+);
+
+const IconClose = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const IconYouTube = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF0000">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+    <polygon fill="#fff" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+  </svg>
+);
+
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return "Unknown size";
   if (bytes < 1024) return bytes + " B";
@@ -193,7 +248,25 @@ const formatFileSize = (bytes?: number) => {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 };
 
-type TabId = "guide" | "full" | "quiz";
+type TabId = "guide" | "full" | "quiz" | "videos";
+
+const SUBJECT_CFG: Record<
+  string,
+  { emoji: string; bg: string; color: string }
+> = {
+  Mathematics: { emoji: "📐", bg: "#EFF6FF", color: "#3B82F6" },
+  "English Language": { emoji: "📖", bg: "#F0FDF4", color: "#22C55E" },
+  "Basic Science": { emoji: "🔬", bg: "#FEF3C7", color: "#F59E0B" },
+  "Social Studies": { emoji: "🌍", bg: "#EEF2FF", color: "#6366F1" },
+  "Agricultural Science": { emoji: "🌾", bg: "#F0FDF4", color: "#16A34A" },
+  History: { emoji: "📜", bg: "#FFF7ED", color: "#EA580C" },
+  Geography: { emoji: "🗺️", bg: "#F0F9FF", color: "#0284C7" },
+  "Computer Studies": { emoji: "💻", bg: "#F8FAFC", color: "#475569" },
+  "Civic Education": { emoji: "🏛️", bg: "#FDF4FF", color: "#A855F7" },
+  "Business Studies": { emoji: "💼", bg: "#FFF1F2", color: "#E11D48" },
+  "Health Education": { emoji: "🏥", bg: "#ECFDF5", color: "#059669" },
+  General: { emoji: "🎓", bg: "#F0F9FF", color: "#0EA5E9" },
+};
 
 export default function StudyPage() {
   const { documentId } = useParams<{ documentId: string }>();
@@ -333,6 +406,11 @@ export default function StudyPage() {
       icon: IconQuestionMarkCircle,
       count: quiz?.questions?.length,
     },
+    {
+      id: "videos" as const,
+      label: "Videos",
+      icon: IconVideo,
+    },
   ];
 
   return (
@@ -430,7 +508,6 @@ export default function StudyPage() {
           </span>
         </nav>
 
-        
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span
             style={{
@@ -458,7 +535,6 @@ export default function StudyPage() {
         </div>
       </div>
 
-      
       <div
         style={{
           maxWidth: 1000,
@@ -469,7 +545,6 @@ export default function StudyPage() {
           gap: 28,
         }}
       >
-        
         <div>
           <h1
             style={{
@@ -487,7 +562,6 @@ export default function StudyPage() {
           </p>
         </div>
 
-        
         {availableLangs.length > 1 && (
           <div>
             <p
@@ -536,7 +610,6 @@ export default function StudyPage() {
           </div>
         )}
 
-        
         {!translation ? (
           <div
             style={{
@@ -603,7 +676,6 @@ export default function StudyPage() {
           </div>
         ) : (
           <>
-            
             <div
               style={{
                 display: "flex",
@@ -661,7 +733,6 @@ export default function StudyPage() {
               })}
             </div>
 
-            {/* Tab Content */}
             <AnimatePresence mode="wait">
               {activeTab === "guide" && (
                 <motion.div
@@ -672,7 +743,6 @@ export default function StudyPage() {
                   transition={{ duration: 0.2 }}
                   style={{ display: "flex", flexDirection: "column", gap: 24 }}
                 >
-                  {/* Summary Card */}
                   <div
                     style={{
                       background: "#fff",
@@ -725,7 +795,6 @@ export default function StudyPage() {
                     </p>
                   </div>
 
-                  {/* Key Points Section */}
                   <div>
                     <div
                       style={{
@@ -873,7 +942,6 @@ export default function StudyPage() {
                     </div>
                   </div>
 
-                  {/* Quiz CTA */}
                   {quiz && (
                     <button
                       onClick={() => setActiveTab("quiz")}
@@ -1140,10 +1208,611 @@ export default function StudyPage() {
                   )}
                 </motion.div>
               )}
+
+              {activeTab === "videos" && (
+                <motion.div
+                  key="videos"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CourseVideosTab docSubject={doc.subject} docLang={lang} />
+                </motion.div>
+              )}
             </AnimatePresence>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+function CourseVideosTab({
+  docSubject,
+  docLang,
+}: {
+  docSubject: string;
+  docLang: string;
+}) {
+  const [activeVideo, setActiveVideo] = useState<VideoModule | null>(null);
+  const brandBlue = "#0EA5E9";
+
+
+  const videos = getVideosBySubjectAndLanguage(docSubject, docLang);
+
+  
+  const grouped = videos.reduce(
+    (acc, v) => {
+      const moduleKey = `Module ${v.moduleIndex}`;
+      if (!acc[moduleKey]) acc[moduleKey] = [];
+      acc[moduleKey].push(v);
+      return acc;
+    },
+    {} as Record<string, VideoModule[]>,
+  );
+
+  const totalProgress = getCourseProgress(videos);
+  const watchedCount = videos.filter((v) => isVideoWatched(v.id)).length;
+
+  if (videos.length === 0) {
+    return (
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 16,
+          border: "1px solid #E2E8F0",
+          padding: "64px 32px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+        <h3
+          style={{
+            fontSize: 18,
+            fontWeight: 700,
+            color: "#0F172A",
+            marginBottom: 6,
+          }}
+        >
+          No Videos in{" "}
+          {SUPPORTED_LANGUAGES.find((l) => l.code === docLang)?.label}
+        </h3>
+        <p style={{ fontSize: 13, color: "#94A3B8" }}>
+          Video tutorials for {docSubject} in your selected language will appear
+          here soon.
+        </p>
+        <button
+          onClick={() => {
+            
+            const hasEnglish = videos.length === 0;
+            if (hasEnglish) {
+              
+            }
+          }}
+          style={{
+            marginTop: 20,
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: `1px solid ${brandBlue}`,
+            background: "transparent",
+            color: brandBlue,
+            fontSize: 12,
+            cursor: "pointer",
+          }}
+        >
+          Check English Videos Instead
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Overall progress bar */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 12,
+          border: "1px solid #E2E8F0",
+          padding: "16px 20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 8,
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#0F172A" }}>
+            Course Video Progress
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: brandBlue }}>
+            {totalProgress}%
+          </span>
+        </div>
+        <div
+          style={{
+            height: 6,
+            background: "#F1F5F9",
+            borderRadius: 99,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${totalProgress}%`,
+              height: "100%",
+              background: brandBlue,
+              borderRadius: 99,
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+        <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 8 }}>
+          {watchedCount} of {videos.length} videos watched
+        </p>
+      </div>
+
+      {/* Videos by module */}
+      {Object.entries(grouped).map(([moduleName, moduleVideos]) => {
+        const moduleProgress = getCourseProgress(moduleVideos);
+        return (
+          <div key={moduleName}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>
+                {moduleName}
+              </h3>
+              {moduleProgress > 0 && moduleProgress < 100 && (
+                <span
+                  style={{ fontSize: 11, color: brandBlue, fontWeight: 600 }}
+                >
+                  {moduleProgress}% complete
+                </span>
+              )}
+              {moduleProgress === 100 && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "#22C55E",
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <IconCheckCircle size={12} color="#22C55E" /> Complete
+                </span>
+              )}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {moduleVideos.map((video) => (
+                <VideoCardComponent
+                  key={video.id}
+                  video={video}
+                  cfg={SUBJECT_CFG[video.subject] || SUBJECT_CFG["General"]}
+                  onPlay={() => setActiveVideo(video)}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {activeVideo && (
+          <VideoModalComponent
+            video={activeVideo}
+            onClose={() => setActiveVideo(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Video Card Component for StudyPage ──────────────────────────────────────
+function VideoCardComponent({
+  video,
+  cfg,
+}: {
+  video: VideoModule;
+  cfg: { emoji: string; bg: string; color: string };
+  onPlay: () => void;
+}) {
+  const B = "#0EA5E9";
+  const watched = isVideoWatched(video.id);
+  const [showPlayer, setShowPlayer] = useState(false);
+
+  if (showPlayer) {
+    return (
+      <VideoModalComponent video={video} onClose={() => setShowPlayer(false)} />
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        background: "#fff",
+        borderRadius: 14,
+        border: "1px solid #E2E8F0",
+        overflow: "hidden",
+        cursor: "pointer",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+        position: "relative",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = B;
+        e.currentTarget.style.boxShadow = "0 4px 20px rgba(14,165,233,0.1)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#E2E8F0";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+      onClick={() => setShowPlayer(true)}
+    >
+      {/* Watched badge */}
+      {watched && (
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 10,
+            background: "#22C55E",
+            color: "#fff",
+            borderRadius: 99,
+            padding: "4px 10px",
+            fontSize: 11,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Watched
+        </div>
+      )}
+
+      {/* Module indicator */}
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          left: 12,
+          zIndex: 10,
+          background: "rgba(0,0,0,0.75)",
+          color: "#fff",
+          borderRadius: 6,
+          padding: "3px 8px",
+          fontSize: 10,
+          fontWeight: 600,
+        }}
+      >
+        Module {video.moduleIndex} of {video.totalModules}
+      </div>
+
+      {/* Thumbnail */}
+      <div
+        style={{
+          position: "relative",
+          paddingTop: "56.25%",
+          background: "#0F172A",
+          overflow: "hidden",
+        }}
+      >
+        {video.youtubeUrl ? (
+          <img
+            src={`https://img.youtube.com/vi/${video.youtubeUrl.split("v=")[1]?.split("&")[0] || video.youtubeUrl.split("/").pop()}/mqdefault.jpg`}
+            alt={video.title}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.85,
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: cfg.bg,
+            }}
+          >
+            <span style={{ fontSize: 48 }}>{cfg.emoji}</span>
+          </div>
+        )}
+
+        {/* Play button */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              background: "rgba(14,165,233,0.9)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            }}
+          >
+            <IconPlay size={20} color="#fff" />
+          </div>
+        </div>
+
+        {/* Duration */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 8,
+            right: 8,
+            background: "rgba(0,0,0,0.7)",
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 600,
+            padding: "2px 8px",
+            borderRadius: 6,
+          }}
+        >
+          {video.duration}
+        </div>
+
+        {/* Language */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 8,
+            left: 8,
+            background: "rgba(0,0,0,0.6)",
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 600,
+            padding: "3px 8px",
+            borderRadius: 6,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <span>{video.languageFlag}</span>
+          <span>{video.language}</span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div style={{ padding: "14px 16px" }}>
+        <p
+          style={{
+            fontWeight: 700,
+            fontSize: 13,
+            color: "#0F172A",
+            lineHeight: 1.4,
+            marginBottom: 4,
+          }}
+        >
+          {video.title}
+        </p>
+        <p style={{ fontSize: 12, color: "#94A3B8" }}>{video.gradeLevel}</p>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPlayer(true);
+          }}
+          style={{
+            marginTop: 12,
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 7,
+            padding: "8px 0",
+            borderRadius: 8,
+            border: "none",
+            background: B,
+            color: "#fff",
+            fontFamily: "inherit",
+            fontWeight: 600,
+            fontSize: 12,
+            cursor: "pointer",
+          }}
+        >
+          <IconPlay size={12} color="#fff" />
+          Watch Video
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Video Modal Component ───────────────────────────────────────────────────
+function VideoModalComponent({
+  video,
+  onClose,
+}: {
+  video: VideoModule;
+  onClose: () => void;
+}) {
+  const [isWatched, setIsWatched] = useState(isVideoWatched(video.id));
+
+  const handleComplete = () => {
+    markVideoWatched(video.id, 0);
+    setIsWatched(true);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        background: "rgba(0,0,0,0.85)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        style={{
+          background: "#fff",
+          borderRadius: 20,
+          overflow: "hidden",
+          width: "100%",
+          maxWidth: 900,
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid #F1F5F9",
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <IconYouTube />
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 15, color: "#0F172A" }}>
+                {video.title}
+              </p>
+              <p style={{ fontSize: 12, color: "#94A3B8" }}>
+                {video.languageFlag} {video.language} · {video.subject} · Module{" "}
+                {video.moduleIndex} of {video.totalModules}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {isWatched && (
+              <div
+                style={{
+                  background: "#DCFCE7",
+                  color: "#15803D",
+                  padding: "4px 12px",
+                  borderRadius: 99,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Completed
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: "#F1F5F9",
+                border: "none",
+                borderRadius: "50%",
+                width: 36,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#64748B",
+              }}
+            >
+              <IconClose />
+            </button>
+          </div>
+        </div>
+
+        {/* Video Player */}
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <VideoPlayer
+            youtubeUrl={video.youtubeUrl}
+            fallbackUrl={video.offlineUrl}
+            title={video.title}
+            onComplete={handleComplete}
+          />
+        </div>
+
+        {/* Description */}
+        <div
+          style={{
+            padding: "14px 20px",
+            borderTop: "1px solid #F1F5F9",
+            background: "#F8FAFC",
+            flexShrink: 0,
+          }}
+        >
+          <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6 }}>
+            {video.description}
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,4 +1,3 @@
-// import React from "react";
 import { IPreview } from "../interfaces/IPreview";
 
 const VideoPreview: React.FC<IPreview> = () => {

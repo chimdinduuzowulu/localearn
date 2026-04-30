@@ -5,7 +5,8 @@ import {
   HiUser, 
   HiLogout,
   HiX,
-  HiAcademicCap 
+  HiAcademicCap,
+  HiVideoCamera
 } from "react-icons/hi";
 
 interface SideNavProps {
@@ -23,7 +24,8 @@ function SideNav({ isOpen, closeSideNav }: SideNavProps) {
 
   const navItems = [
     { path: "/index", icon: <HiHome className="w-5 h-5" />, label: "Dashboard" },
-    { path: "/courses", icon: <HiBookOpen className="w-5 h-5" />, label: "Courses" },
+    { path: "/courses", icon: <HiBookOpen className="w-5 h-5" />, label: "My Courses" },
+    { path: "/videos", icon: <HiVideoCamera className="w-5 h-5" />, label: "Video Tutorials" },
     { path: "/profile", icon: <HiUser className="w-5 h-5" />, label: "Profile" },
   ];
 
