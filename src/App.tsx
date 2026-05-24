@@ -17,16 +17,23 @@ import StudentLibrary from "./pages/student/StudentLibrary";
 import VideoTutorials from "./pages/student/VideoTutorials";
 import StudyPage from "./pages/student/StudyPage";
 import QuizPage from "./pages/student/QuizPage";
+import Courses from "./pages/Courses";
+
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import ViewDocument from "./pages/teacher/ViewDocument";
+import CreateCourse from "./pages/teacher/CreateCourse";
+import ManageVideos from "./pages/teacher/ManageVideos";
+
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   useEffect(() => {
     subscribeUser();
 
-    const handleOnline = () => toast.success("✅ You are back online");
-    const handleOffline = () => toast.error("📡 You are offline — some features may be limited");
+    const handleOnline = () =>
+      toast.success("✅ You are back online");
+    const handleOffline = () =>
+      toast.error("📡 You are offline — some features may be limited");
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -51,16 +58,25 @@ function App() {
         <Route path="/reset" element={<ForgotPassword />} />
         <Route path="/profile" element={<Profile />} />
 
-        {/* Student dashboard */}
+        {/* Student */}
         <Route path="/index" element={<Dashboard />} />
-        <Route path="/courses" element={<StudentLibrary />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/library" element={<StudentLibrary />} />
         <Route path="/study/:documentId" element={<StudyPage />} />
         <Route path="/quiz/:documentId" element={<QuizPage />} />
         <Route path="/videos" element={<VideoTutorials />} />
 
-        {/* Teacher portal */}
+        {/* Teacher */}
         <Route path="/teacher" element={<TeacherDashboard />} />
-        <Route path="/view-document/:documentId" element={<ViewDocument />} />
+        <Route path="/teacher/create-course" element={<CreateCourse />} />
+        <Route
+          path="/teacher/manage-videos/:courseId"
+          element={<ManageVideos />}
+        />
+        <Route
+          path="/view-document/:documentId"
+          element={<ViewDocument />}
+        />
 
         {/* Misc */}
         <Route path="/blank" element={<Blank />} />

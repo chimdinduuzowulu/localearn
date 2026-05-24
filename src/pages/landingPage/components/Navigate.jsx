@@ -13,7 +13,7 @@ const Navigate = () => {
 
   return (
     <section className="w-full bg-white py-16 px-4">
-      <div className="md:max-w-[1200px] mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <div className="md:max-w-[99%] mx-auto grid md:grid-cols-2 gap-12 items-center">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}

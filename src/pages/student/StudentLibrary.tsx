@@ -3,87 +3,49 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import { motion } from "framer-motion";
 import { getAllDocuments } from "../../db";
+import { SUPPORTED_LANGUAGES, CurriculumDocument } from "../../utils/curriculum";
+import { useAuth } from "../../context/AuthContext";
 import {
-  SUPPORTED_LANGUAGES,
-  CurriculumDocument,
-} from "../../utils/curriculum";
-import { getAllVideoModules, VideoModule } from "../../utils/videoData";
+  getEnrolledVideos,
+  EnrichedVideoEntry,
+  LANGUAGE_FLAGS,
+  LANGUAGE_LABELS,
+  extractYouTubeId,
+  getYouTubeThumbnail,
+} from "../../utils/videoData";
+import { isVideoWatched, markVideoWatched } from "../../utils/videoProgress";
 
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 const IconSearch = () => (
-  <svg
-    width="17"
-    height="17"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#94A3B8"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
 
 const IconX = ({ size = 14 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
 const IconBookOpen = ({ color = "#fff" }: { color?: string }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
   </svg>
 );
 
 const IconPlay = ({ color = "#0EA5E9" }: { color?: string }) => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill={color}
-    stroke={color}
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="13" height="13" viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="5 3 19 12 5 21 5 3" />
   </svg>
 );
 
 const IconPackage = ({ color = "#94A3B8" }: { color?: string }) => (
-  <svg
-    width="40"
-    height="40"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
     <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
@@ -91,29 +53,59 @@ const IconPackage = ({ color = "#94A3B8" }: { color?: string }) => (
   </svg>
 );
 
+const IconClose = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+// ─── Subject config ───────────────────────────────────────────────────────────
+
 const SUBJECT_CONFIG: Record<string, { emoji: string; bg: string; color: string }> = {
-  Mathematics: { emoji: "📐", bg: "#EFF6FF", color: "#3B82F6" },
-  "English Language": { emoji: "📖", bg: "#F0FDF4", color: "#22C55E" },
-  "Basic Science": { emoji: "🔬", bg: "#FEF3C7", color: "#F59E0B" },
-  "Social Studies": { emoji: "🌍", bg: "#EEF2FF", color: "#6366F1" },
+  Mathematics:            { emoji: "📐", bg: "#EFF6FF", color: "#3B82F6" },
+  "English Language":     { emoji: "📖", bg: "#F0FDF4", color: "#22C55E" },
+  English:                { emoji: "📖", bg: "#F0FDF4", color: "#22C55E" },
+  "Basic Science":        { emoji: "🔬", bg: "#FEF3C7", color: "#F59E0B" },
+  Science:                { emoji: "🔬", bg: "#FEF3C7", color: "#F59E0B" },
+  "Social Studies":       { emoji: "🌍", bg: "#EEF2FF", color: "#6366F1" },
   "Agricultural Science": { emoji: "🌾", bg: "#F0FDF4", color: "#16A34A" },
-  History: { emoji: "📜", bg: "#FFF7ED", color: "#EA580C" },
-  Geography: { emoji: "🗺️", bg: "#F0F9FF", color: "#0284C7" },
-  "Computer Studies": { emoji: "💻", bg: "#F8FAFC", color: "#475569" },
-  "Civic Education": { emoji: "🏛️", bg: "#FDF4FF", color: "#A855F7" },
-  "Business Studies": { emoji: "💼", bg: "#FFF1F2", color: "#E11D48" },
-  "Health Education": { emoji: "🏥", bg: "#ECFDF5", color: "#059669" },
-  General: { emoji: "🎓", bg: "#F0F9FF", color: "#0EA5E9" },
+  Agriculture:            { emoji: "🌾", bg: "#F0FDF4", color: "#16A34A" },
+  History:                { emoji: "📜", bg: "#FFF7ED", color: "#EA580C" },
+  Geography:              { emoji: "🗺️", bg: "#F0F9FF", color: "#0284C7" },
+  "Computer Studies":     { emoji: "💻", bg: "#F8FAFC", color: "#475569" },
+  "Computer Science":     { emoji: "💻", bg: "#F8FAFC", color: "#475569" },
+  "Civic Education":      { emoji: "🏛️", bg: "#FDF4FF", color: "#A855F7" },
+  Civic:                  { emoji: "🏛️", bg: "#FDF4FF", color: "#A855F7" },
+  "Business Studies":     { emoji: "💼", bg: "#FFF1F2", color: "#E11D48" },
+  "Health Education":     { emoji: "🏥", bg: "#ECFDF5", color: "#059669" },
+  "Basic Technology":     { emoji: "⚙️", bg: "#FFF7ED", color: "#D97706" },
+  "Home Economics":       { emoji: "🏠", bg: "#ECFDF5", color: "#059669" },
+  "Fine Arts":            { emoji: "🎨", bg: "#FFF1F2", color: "#E11D48" },
+  Music:                  { emoji: "🎵", bg: "#F5F3FF", color: "#7C3AED" },
+  "Physical Education":   { emoji: "⚽", bg: "#F0FDF4", color: "#16A34A" },
+  "Islamic Studies":      { emoji: "📿", bg: "#FEF9C3", color: "#CA8A04" },
+  "Christian Religious Studies": { emoji: "✝️", bg: "#EFF6FF", color: "#1D4ED8" },
+  General:                { emoji: "🎓", bg: "#F0F9FF", color: "#0EA5E9" },
 };
 
+function getCfg(subject: string) {
+  return SUBJECT_CONFIG[subject] ?? SUBJECT_CONFIG["General"];
+}
+
+const B = "#0EA5E9";
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function StudentLibrary() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<CurriculumDocument[]>([]);
   const [selectedLang, setSelectedLang] = useState<string>("hausa");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"courses" | "videos">("courses");
-  const [activeVideo, setActiveVideo] = useState<any | null>(null);
+  const [activeVideo, setActiveVideo] = useState<EnrichedVideoEntry | null>(null);
 
   useEffect(() => {
     getAllDocuments()
@@ -121,13 +113,10 @@ export default function StudentLibrary() {
       .finally(() => setLoading(false));
   }, []);
 
-  const availableLangs = SUPPORTED_LANGUAGES.filter(
-    (l) => l.code !== "english",
-  );
+  const availableLangs = SUPPORTED_LANGUAGES.filter((l) => l.code !== "english");
 
   const filtered = documents.filter((doc) => {
-    const hasLang =
-      !!doc.translations[selectedLang as keyof typeof doc.translations];
+    const hasLang = !!doc.translations[selectedLang as keyof typeof doc.translations];
     const matchSearch =
       !searchQuery ||
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,37 +130,21 @@ export default function StudentLibrary() {
       acc[doc.subject].push(doc);
       return acc;
     },
-    {} as Record<string, CurriculumDocument[]>,
+    {} as Record<string, CurriculumDocument[]>
   );
-
-  const B = "#0EA5E9";
 
   if (loading) {
     return (
       <Layout>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: 320,
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 320 }}>
           <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                border: `3px solid ${B}`,
-                borderTopColor: "transparent",
-                animation: "spin 0.8s linear infinite",
-                margin: "0 auto 12px",
-              }}
-            />
-            <p style={{ fontSize: 14, color: "#94A3B8" }}>
-              Loading your courses…
-            </p>
+            <div style={{
+              width: 40, height: 40, borderRadius: "50%",
+              border: `3px solid ${B}`, borderTopColor: "transparent",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 12px",
+            }} />
+            <p style={{ fontSize: 14, color: "#94A3B8" }}>Loading your courses…</p>
           </div>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -182,25 +155,24 @@ export default function StudentLibrary() {
   return (
     <Layout>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+        {/* Page heading */}
         <div>
-          <h1
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: "#0F172A",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            My Courses
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0F172A", letterSpacing: "-0.02em" }}>
+            My Library
           </h1>
           <p style={{ fontSize: 14, color: "#94A3B8", marginTop: 4 }}>
             Learn every subject in the language you think in
           </p>
         </div>
 
-        {/* Courses / Videos Tab Switch */}
+        {/* Tab switch */}
         <div style={{ display: "flex", gap: 4, borderBottom: "1px solid #E2E8F0", paddingBottom: 0 }}>
-          {([["courses", "📚", "Course Materials"], ["videos", "🎬", "Video Tutorials"]] as const).map(([id, emoji, label]) => {
+          {(
+            [
+              ["courses", "📚", "Course Materials"],
+              ["videos",  "🎬", "Video Tutorials"],
+            ] as const
+          ).map(([id, emoji, label]) => {
             const active = activeTab === id;
             return (
               <button
@@ -210,9 +182,13 @@ export default function StudentLibrary() {
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "10px 20px", marginBottom: -1,
                   borderBottom: active ? `2px solid ${B}` : "2px solid transparent",
-                  background: "none", borderTop: "none", borderLeft: "none", borderRight: "none",
-                  color: active ? B : "#64748B", fontWeight: active ? 700 : 500,
-                  fontSize: 14, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+                  background: "none",
+                  borderTop: "none", borderLeft: "none", borderRight: "none",
+                  color: active ? B : "#64748B",
+                  fontWeight: active ? 700 : 500,
+                  fontSize: 14, cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 0.15s",
                 }}
               >
                 <span>{emoji}</span>
@@ -222,10 +198,17 @@ export default function StudentLibrary() {
           })}
         </div>
 
+        {/* ── Videos Tab ── */}
         {activeTab === "videos" ? (
-          <VideoSection selectedLang={selectedLang} activeVideo={activeVideo} setActiveVideo={setActiveVideo} />
+          <VideoSection
+            studentEmail={user?.email ?? ""}
+            activeVideo={activeVideo}
+            setActiveVideo={setActiveVideo}
+          />
         ) : (
+          /* ── Course Materials Tab ── */
           <>
+            {/* Language selector */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {availableLangs.map((lang) => {
                 const active = selectedLang === lang.code;
@@ -234,19 +217,13 @@ export default function StudentLibrary() {
                     key={lang.code}
                     onClick={() => setSelectedLang(lang.code)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      padding: "9px 18px",
-                      borderRadius: 10,
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "9px 18px", borderRadius: 10,
                       border: `1.5px solid ${active ? B : "#E2E8F0"}`,
                       background: active ? B : "#fff",
                       color: active ? "#fff" : "#475569",
-                      fontFamily: "inherit",
-                      fontWeight: 600,
-                      fontSize: 14,
-                      cursor: "pointer",
-                      transition: "all 0.15s",
+                      fontFamily: "inherit", fontWeight: 600, fontSize: 14,
+                      cursor: "pointer", transition: "all 0.15s",
                     }}
                   >
                     <span style={{ fontSize: 16 }}>{lang.flag}</span>
@@ -256,16 +233,9 @@ export default function StudentLibrary() {
               })}
             </div>
 
+            {/* Search */}
             <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  pointerEvents: "none",
-                }}
-              >
+              <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
                 <IconSearch />
               </div>
               <input
@@ -293,19 +263,10 @@ export default function StudentLibrary() {
                 <button
                   onClick={() => setSearchQuery("")}
                   style={{
-                    position: "absolute",
-                    right: 14,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "#F1F5F9",
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "4px 6px",
-                    cursor: "pointer",
-                    color: "#64748B",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+                    background: "#F1F5F9", border: "none", borderRadius: 6,
+                    padding: "4px 6px", cursor: "pointer", color: "#64748B",
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                 >
                   <IconX size={13} />
@@ -313,49 +274,40 @@ export default function StudentLibrary() {
               )}
             </div>
 
+            {/* Documents grouped by subject */}
             {Object.keys(grouped).length === 0 ? (
-              <div
-                style={{
-                  background: "#fff",
-                  borderRadius: 16,
-                  border: "1px solid #E2E8F0",
-                  padding: "72px 32px",
-                  textAlign: "center",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    marginBottom: 16,
-                  }}
-                >
+              <div style={{
+                background: "#fff", borderRadius: 16,
+                border: "1px solid #E2E8F0", padding: "72px 32px", textAlign: "center",
+              }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                   <IconPackage color="#CBD5E1" />
                 </div>
-                <p
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    color: "#334155",
-                    marginBottom: 6,
-                  }}
-                >
-                  {searchQuery ? "No results found" : "No courses available yet"}
+                <p style={{ fontWeight: 700, fontSize: 16, color: "#334155", marginBottom: 6 }}>
+                  {searchQuery ? "No results found" : "No course materials yet"}
                 </p>
-                <p style={{ fontSize: 13, color: "#94A3B8" }}>
+                <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 20 }}>
                   {searchQuery
-                    ? `Try searching for something else`
-                    : "Check back soon — your teacher will upload content"}
+                    ? "Try searching for something else"
+                    : "Your teacher hasn't uploaded materials yet, or none match this language."}
                 </p>
+                {!searchQuery && (
+                  <button
+                    onClick={() => navigate("/courses")}
+                    style={{
+                      padding: "9px 22px", borderRadius: 10, border: "none",
+                      background: B, color: "#fff", fontWeight: 600, fontSize: 14,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    Browse Courses
+                  </button>
+                )}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
                 {Object.entries(grouped).map(([subject, docs], si) => {
-                  const cfg = SUBJECT_CONFIG[subject] ?? {
-                    emoji: "📄",
-                    bg: "#F8FAFC",
-                    iconColor: "#94A3B8",
-                  };
+                  const cfg = getCfg(subject);
                   return (
                     <motion.div
                       key={subject}
@@ -363,65 +315,33 @@ export default function StudentLibrary() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: si * 0.06 }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          marginBottom: 16,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: 11,
-                            background: cfg.bg,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 20,
-                            flexShrink: 0,
-                            border: "1px solid rgba(0,0,0,0.06)",
-                          }}
-                        >
+                      {/* Subject heading */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                        <div style={{
+                          width: 38, height: 38, borderRadius: 11,
+                          background: cfg.bg,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 20, flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)",
+                        }}>
                           {cfg.emoji}
                         </div>
-                        <div
-                          style={{ display: "flex", alignItems: "center", gap: 10 }}
-                        >
-                          <h2
-                            style={{
-                              fontSize: 16,
-                              fontWeight: 700,
-                              color: "#0F172A",
-                            }}
-                          >
-                            {subject}
-                          </h2>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: "2px 9px",
-                              borderRadius: 99,
-                              background: "#F1F5F9",
-                              color: "#64748B",
-                              fontWeight: 600,
-                            }}
-                          >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>{subject}</h2>
+                          <span style={{
+                            fontSize: 11, padding: "2px 9px", borderRadius: 99,
+                            background: "#F1F5F9", color: "#64748B", fontWeight: 600,
+                          }}>
                             {docs.length} {docs.length === 1 ? "doc" : "docs"}
                           </span>
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fill, minmax(280px, 1fr))",
-                          gap: 16,
-                        }}
-                      >
+                      {/* Document cards */}
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                        gap: 16,
+                      }}>
                         {docs.map((doc, di) => (
                           <motion.div
                             key={doc.id}
@@ -439,94 +359,48 @@ export default function StudentLibrary() {
                               flexDirection: "column",
                               gap: 14,
                             }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.borderColor = B)
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.borderColor = "#E2E8F0")
-                            }
+                            onMouseEnter={(e) => (e.currentTarget.style.borderColor = B)}
+                            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#E2E8F0")}
                             onClick={() => navigate(`/study/${doc.id}`)}
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                justifyContent: "space-between",
-                                gap: 12,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: 44,
-                                  height: 44,
-                                  borderRadius: 12,
-                                  background: cfg.bg,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 22,
-                                  border: "1px solid rgba(0,0,0,0.05)",
-                                  flexShrink: 0,
-                                }}
-                              >
+                            {/* Doc header */}
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                              <div style={{
+                                width: 44, height: 44, borderRadius: 12,
+                                background: cfg.bg,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 22, border: "1px solid rgba(0,0,0,0.05)", flexShrink: 0,
+                              }}>
                                 {cfg.emoji}
                               </div>
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  padding: "3px 10px",
-                                  borderRadius: 99,
-                                  background: "#DCFCE7",
-                                  color: "#15803D",
-                                  fontWeight: 600,
-                                  flexShrink: 0,
-                                }}
-                              >
+                              <span style={{
+                                fontSize: 11, padding: "3px 10px", borderRadius: 99,
+                                background: "#DCFCE7", color: "#15803D", fontWeight: 600, flexShrink: 0,
+                              }}>
                                 Ready
                               </span>
                             </div>
 
+                            {/* Doc title */}
                             <div>
-                              <p
-                                style={{
-                                  fontWeight: 700,
-                                  fontSize: 14,
-                                  color: "#0F172A",
-                                  lineHeight: 1.4,
-                                }}
-                              >
+                              <p style={{ fontWeight: 700, fontSize: 14, color: "#0F172A", lineHeight: 1.4 }}>
                                 {doc.title}
                               </p>
-                              <p
-                                style={{
-                                  fontSize: 12,
-                                  color: "#94A3B8",
-                                  marginTop: 3,
-                                }}
-                              >
-                                {doc.gradeLevel}
-                              </p>
+                              <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>{doc.gradeLevel}</p>
                             </div>
 
-                            <div
-                              style={{ display: "flex", gap: 6, flexWrap: "wrap" }}
-                            >
+                            {/* Language chips */}
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                               {Object.keys(doc.translations).map((lang) => {
-                                const l = SUPPORTED_LANGUAGES.find(
-                                  (x) => x.code === lang,
-                                );
+                                const l = SUPPORTED_LANGUAGES.find((x) => x.code === lang);
                                 const isCurrent = lang === selectedLang;
                                 return (
                                   <span
                                     key={lang}
                                     style={{
-                                      fontSize: 11,
-                                      padding: "3px 10px",
-                                      borderRadius: 99,
+                                      fontSize: 11, padding: "3px 10px", borderRadius: 99,
                                       fontWeight: 600,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 4,
+                                      display: "flex", alignItems: "center", gap: 4,
                                       background: isCurrent ? "#EFF6FF" : "#F8FAFC",
                                       color: isCurrent ? B : "#94A3B8",
                                       border: `1px solid ${isCurrent ? "#BAE6FD" : "#F1F5F9"}`,
@@ -538,35 +412,19 @@ export default function StudentLibrary() {
                               })}
                             </div>
 
-                            <div
-                              style={{ display: "flex", gap: 8 }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
+                            {/* Actions */}
+                            <div style={{ display: "flex", gap: 8 }} onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => navigate(`/study/${doc.id}`)}
                                 style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: 7,
-                                  padding: "10px 0",
-                                  borderRadius: 9,
-                                  border: "none",
-                                  background: B,
-                                  color: "#fff",
-                                  fontFamily: "inherit",
-                                  fontWeight: 600,
-                                  fontSize: 13,
-                                  cursor: "pointer",
+                                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                                  gap: 7, padding: "10px 0", borderRadius: 9,
+                                  border: "none", background: B, color: "#fff",
+                                  fontFamily: "inherit", fontWeight: 600, fontSize: 13, cursor: "pointer",
                                   transition: "opacity 0.15s",
                                 }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.opacity = "0.85")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.opacity = "1")
-                                }
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                               >
                                 <IconBookOpen color="#fff" />
                                 Study
@@ -574,20 +432,10 @@ export default function StudentLibrary() {
                               <button
                                 onClick={() => navigate(`/quiz/${doc.id}`)}
                                 style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: 7,
-                                  padding: "10px 0",
-                                  borderRadius: 9,
-                                  border: "1.5px solid #E2E8F0",
-                                  background: "#fff",
-                                  color: "#475569",
-                                  fontFamily: "inherit",
-                                  fontWeight: 600,
-                                  fontSize: 13,
-                                  cursor: "pointer",
+                                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                                  gap: 7, padding: "10px 0", borderRadius: 9,
+                                  border: "1.5px solid #E2E8F0", background: "#fff", color: "#475569",
+                                  fontFamily: "inherit", fontWeight: 600, fontSize: 13, cursor: "pointer",
                                   transition: "all 0.15s",
                                 }}
                                 onMouseEnter={(e) => {
@@ -614,95 +462,76 @@ export default function StudentLibrary() {
           </>
         )}
       </div>
+
+      {/* Video modal */}
+      {activeVideo && (
+        <LibraryVideoModal
+          video={activeVideo}
+          studentEmail={user?.email ?? ""}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </Layout>
   );
 }
 
-
-// const SUBJECT_CFG: Record<string, { emoji: string; bg: string; color: string }> = {
-//   Mathematics:           { emoji: "📐", bg: "#EFF6FF", color: "#3B82F6" },
-//   "English Language":    { emoji: "📖", bg: "#F0FDF4", color: "#22C55E" },
-//   "Basic Science":       { emoji: "🔬", bg: "#FEF3C7", color: "#F59E0B" },
-//   "Social Studies":      { emoji: "🌍", bg: "#EEF2FF", color: "#6366F1" },
-//   "Agricultural Science":{ emoji: "🌾", bg: "#F0FDF4", color: "#16A34A" },
-//   History:               { emoji: "📜", bg: "#FFF7ED", color: "#EA580C" },
-//   Geography:             { emoji: "🗺️", bg: "#F0F9FF", color: "#0284C7" },
-//   "Computer Studies":    { emoji: "💻", bg: "#F8FAFC", color: "#475569" },
-//   "Civic Education":     { emoji: "🏛️", bg: "#FDF4FF", color: "#A855F7" },
-//   General:               { emoji: "🎓", bg: "#F0F9FF", color: "#0EA5E9" },
-// };
-
-// const LANG_MAP: Record<string, string> = {
-//   hausa: "Hausa", igbo: "Igbo", yoruba: "Yoruba", english: "English",
-// };
+// ─── Video Section (inside Library) ──────────────────────────────────────────
 
 function VideoSection({
-  selectedLang,
+  studentEmail,
   activeVideo,
   setActiveVideo,
 }: {
-  selectedLang: string;
-  activeVideo: VideoModule | null;
-  setActiveVideo: (v: VideoModule | null) => void;
+  studentEmail: string;
+  activeVideo: EnrichedVideoEntry | null;
+  setActiveVideo: (v: EnrichedVideoEntry | null) => void;
 }) {
-  // const VB = "#0EA5E9";
-  
-  const langNameMap: Record<string, string> = {
-    hausa: "Hausa",
-    igbo: "Igbo",
-    yoruba: "Yoruba",
-    english: "English",
-  };
-  
-  const langName = langNameMap[selectedLang] ?? "English";
-  
-
-  const allVideos = getAllVideoModules();
-  const videos = allVideos.filter((v) => v.language === langName);
-  
+  const navigate = useNavigate();
+  const allVideos = getEnrolledVideos(studentEmail);
+console.log("activeVideo videos:", activeVideo);
   // Group by subject
-  const grouped = videos.reduce(
+  const grouped = allVideos.reduce(
     (acc, v) => {
       if (!acc[v.subject]) acc[v.subject] = [];
       acc[v.subject].push(v);
       return acc;
     },
-    {} as Record<string, VideoModule[]>,
+    {} as Record<string, EnrichedVideoEntry[]>
   );
 
-  if (videos.length === 0) {
+  if (allVideos.length === 0) {
     return (
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          border: "1px solid #E2E8F0",
-          padding: "72px 32px",
-          textAlign: "center",
-        }}
-      >
+      <div style={{
+        background: "#fff", borderRadius: 16,
+        border: "1px solid #E2E8F0", padding: "72px 32px", textAlign: "center",
+      }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
-        <p
+        <p style={{ fontWeight: 700, fontSize: 16, color: "#334155", marginBottom: 6 }}>
+          No videos yet
+        </p>
+        <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 20 }}>
+          Enrol in a course to access video tutorials here.
+        </p>
+        <button
+          onClick={() => navigate("/courses")}
           style={{
-            fontWeight: 700,
-            fontSize: 16,
-            color: "#334155",
-            marginBottom: 6,
+            padding: "9px 22px", borderRadius: 10, border: "none",
+            background: B, color: "#fff", fontWeight: 600, fontSize: 14,
+            cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          No videos for {langName} yet
-        </p>
-        <p style={{ fontSize: 13, color: "#94A3B8" }}>
-          Check back soon — video tutorials will appear here
-        </p>
+          Browse Courses
+        </button>
       </div>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
-      {Object.entries(grouped).map(([subject, vids], si) => {
-        const cfg = SUBJECT_CONFIG[subject] ?? SUBJECT_CONFIG["General"];
+      {Object.entries(grouped).map(([subject, videos], si) => {
+        const cfg = getCfg(subject);
         return (
           <motion.div
             key={subject}
@@ -710,71 +539,40 @@ function VideoSection({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: si * 0.06 }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 11,
-                  background: cfg.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 20,
-                  flexShrink: 0,
-                  border: "1px solid rgba(0,0,0,0.06)",
-                }}
-              >
+            {/* Subject heading */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 11,
+                background: cfg.bg,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)",
+              }}>
                 {cfg.emoji}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <h2
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#0F172A",
-                  }}
-                >
-                  {subject}
-                </h2>
-                <span
-                  style={{
-                    fontSize: 11,
-                    padding: "2px 9px",
-                    borderRadius: 99,
-                    background: "#F1F5F9",
-                    color: "#64748B",
-                    fontWeight: 600,
-                  }}
-                >
-                  {vids.length} {vids.length === 1 ? "video" : "videos"}
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0F172A" }}>{subject}</h2>
+                <span style={{
+                  fontSize: 11, padding: "2px 9px", borderRadius: 99,
+                  background: "#F1F5F9", color: "#64748B", fontWeight: 600,
+                }}>
+                  {videos.length} {videos.length === 1 ? "video" : "videos"}
                 </span>
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                overflowX: "auto",
-                gap: 16,
-                paddingBottom: 16,
-                scrollbarWidth: "thin",
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              {vids.map((video) => (
-                <VideoCardComponent
+            {/* Horizontal scroll row of video cards */}
+            <div style={{
+              display: "flex", flexDirection: "row",
+              overflowX: "auto", gap: 16, paddingBottom: 16,
+              scrollbarWidth: "thin",
+              WebkitOverflowScrolling: "touch",
+            } as React.CSSProperties}>
+              {videos.map((video) => (
+                <LibraryVideoCard
                   key={video.id}
                   video={video}
                   cfg={cfg}
+                  studentEmail={studentEmail}
                   onPlay={() => setActiveVideo(video)}
                 />
               ))}
@@ -782,27 +580,28 @@ function VideoSection({
           </motion.div>
         );
       })}
-
-      {/* Modal */}
-      {activeVideo && (
-        <VideoModalComponent
-          video={activeVideo}
-          onClose={() => setActiveVideo(null)}
-        />
-      )}
     </div>
   );
 }
-function VideoCardComponent({
+
+// ─── Library Video Card ───────────────────────────────────────────────────────
+
+function LibraryVideoCard({
   video,
   cfg,
+  studentEmail,
   onPlay,
 }: {
-  video: VideoModule;
+  video: EnrichedVideoEntry;
   cfg: { emoji: string; bg: string; color: string };
+  studentEmail: string;
   onPlay: () => void;
 }) {
-  const B = "#0EA5E9";
+  const watched = isVideoWatched(studentEmail, video.courseId, video.id);
+  const ytId = extractYouTubeId(video.url);
+  const thumb = ytId ? getYouTubeThumbnail(ytId) : null;
+  const flag = LANGUAGE_FLAGS[video.language] ?? "🌐";
+  const langLabel = LANGUAGE_LABELS[video.language] ?? video.language;
 
   return (
     <motion.div
@@ -830,143 +629,90 @@ function VideoCardComponent({
       onClick={onPlay}
     >
       {/* Thumbnail */}
-      <div
-        style={{
-          position: "relative",
-          paddingTop: "56.25%",
-          background: "#0F172A",
-          overflow: "hidden",
-        }}
-      >
-        {video.youtubeUrl ? (
+      <div style={{ position: "relative", paddingTop: "56.25%", background: "#0F172A", overflow: "hidden" }}>
+        {thumb ? (
           <img
-            src={`https://img.youtube.com/vi/${
-              video.youtubeUrl.split("v=")[1]?.split("&")[0] ||
-              video.youtubeUrl.split("/").pop()
-            }/mqdefault.jpg`}
+            src={thumb}
             alt={video.title}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 0.85,
-            }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         ) : (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: cfg.bg,
-            }}
-          >
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: cfg.bg,
+          }}>
             <span style={{ fontSize: 48 }}>{cfg.emoji}</span>
           </div>
         )}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              background: "rgba(14,165,233,0.9)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-            }}
-          >
+
+        {/* Play overlay */}
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: "50%",
+            background: "rgba(14,165,233,0.9)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="1.5">
               <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
           </div>
         </div>
-        <div
-          style={{
-            position: "absolute",
-            bottom: 8,
-            right: 8,
-            background: "rgba(0,0,0,0.7)",
-            color: "#fff",
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "2px 8px",
-            borderRadius: 6,
-          }}
-        >
-          {video.duration}
+
+        {/* Duration */}
+        {video.duration && (
+          <div style={{
+            position: "absolute", bottom: 8, right: 8,
+            background: "rgba(0,0,0,0.7)", color: "#fff",
+            fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6,
+          }}>
+            {video.duration}
+          </div>
+        )}
+
+        {/* Language */}
+        <div style={{
+          position: "absolute", bottom: 8, left: 8,
+          background: "rgba(0,0,0,0.6)", color: "#fff",
+          fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6,
+          display: "flex", alignItems: "center", gap: 4,
+        }}>
+          <span>{flag}</span>
+          <span>{langLabel}</span>
         </div>
-        <div
-          style={{
-            position: "absolute",
-            bottom: 8,
-            left: 8,
-            background: "rgba(0,0,0,0.6)",
-            color: "#fff",
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "3px 8px",
-            borderRadius: 6,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          <span>{video.languageFlag}</span>
-          <span>{video.language}</span>
-        </div>
+
+        {/* Watched badge */}
+        {watched && (
+          <div style={{
+            position: "absolute", top: 8, right: 8,
+            background: "#22C55E", color: "#fff",
+            borderRadius: 99, padding: "3px 8px",
+            fontSize: 11, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 4,
+          }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Watched
+          </div>
+        )}
       </div>
 
       <div style={{ padding: "14px 16px" }}>
-        <p
-          style={{
-            fontWeight: 700,
-            fontSize: 13,
-            color: "#0F172A",
-            lineHeight: 1.4,
-            marginBottom: 4,
-          }}
-        >
+        <p style={{ fontWeight: 700, fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 4 }}>
           {video.title}
         </p>
         <p style={{ fontSize: 12, color: "#94A3B8" }}>{video.gradeLevel}</p>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay();
-          }}
+          onClick={(e) => { e.stopPropagation(); onPlay(); }}
           style={{
-            marginTop: 12,
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 7,
-            padding: "9px 0",
-            borderRadius: 9,
-            border: "none",
-            background: B,
-            color: "#fff",
-            fontFamily: "inherit",
-            fontWeight: 600,
-            fontSize: 13,
-            cursor: "pointer",
+            marginTop: 12, width: "100%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 7, padding: "9px 0", borderRadius: 9,
+            border: "none", background: B, color: "#fff",
+            fontFamily: "inherit", fontWeight: 600, fontSize: 13, cursor: "pointer",
           }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="1.5">
@@ -979,26 +725,36 @@ function VideoCardComponent({
   );
 }
 
-function VideoModalComponent({
+// ─── Library Video Modal ──────────────────────────────────────────────────────
+
+function LibraryVideoModal({
   video,
+  studentEmail,
   onClose,
 }: {
-  video: VideoModule;
+  video: EnrichedVideoEntry;
+  studentEmail: string;
   onClose: () => void;
 }) {
+  const [watched, setWatched] = useState(isVideoWatched(studentEmail, video.courseId, video.id));
+  const ytId = extractYouTubeId(video.url);
+  const flag = LANGUAGE_FLAGS[video.language] ?? "🌐";
+  const langLabel = LANGUAGE_LABELS[video.language] ?? video.language;
+
+  const handleComplete = () => {
+    markVideoWatched(studentEmail, video.courseId, video.id);
+    setWatched(true);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
+        position: "fixed", inset: 0, zIndex: 1000,
         background: "rgba(0,0,0,0.75)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "flex", alignItems: "center", justifyContent: "center",
         padding: 20,
       }}
       onClick={onClose}
@@ -1007,103 +763,96 @@ function VideoModalComponent({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         style={{
-          background: "#fff",
-          borderRadius: 20,
-          overflow: "hidden",
-          width: "100%",
-          maxWidth: 800,
+          background: "#fff", borderRadius: 20, overflow: "hidden",
+          width: "100%", maxWidth: 800,
           boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            padding: "16px 20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: "1px solid #F1F5F9",
-          }}
-        >
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottom: "1px solid #F1F5F9",
+        }}>
           <div>
-            <p style={{ fontWeight: 700, fontSize: 15, color: "#0F172A" }}>
-              {video.title}
-            </p>
+            <p style={{ fontWeight: 700, fontSize: 15, color: "#0F172A" }}>{video.title}</p>
             <p style={{ fontSize: 12, color: "#94A3B8" }}>
-              {video.languageFlag} {video.language} · {video.subject} ·{" "}
-              {video.gradeLevel}
+              {flag} {langLabel} · {video.subject} · {video.courseTitle}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "#F1F5F9",
-              border: "none",
-              borderRadius: "50%",
-              width: 36,
-              height: 36,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        <div style={{ position: "relative", paddingTop: "56.25%", background: "#000" }}>
-          {!video.youtubeUrl ? (
-            <iframe
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {watched && (
+              <div style={{
+                background: "#DCFCE7", color: "#15803D",
+                padding: "4px 12px", borderRadius: 99,
+                fontSize: 11, fontWeight: 600,
+                display: "flex", alignItems: "center", gap: 4,
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Completed
+              </div>
+            )}
+            <button
+              onClick={onClose}
               style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                border: "none",
-              }}
-              src={`https://www.youtube.com/embed/${
-                video.youtubeUrl.split("v=")[1]?.split("&")[0] ||
-                video.youtubeUrl.split("/").pop()
-              }?autoplay=1&rel=0`}
-              title={video.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          ) : video.offlineUrl ? (
-            <video
-              controls
-              autoPlay
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-              }}
-              src={video.offlineUrl}
-            />
-          ) : (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#0F172A",
-                color: "#fff",
+                background: "#F1F5F9", border: "none", borderRadius: "50%",
+                width: 36, height: 36,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
               }}
             >
-              <p>Video not available</p>
-            </div>
+              <IconClose />
+            </button>
+          </div>
+        </div>
+
+        {/* Video */}
+        <div style={{ position: "relative", paddingTop: "56.25%", background: "#000" }}>
+          {ytId ? (
+            <iframe
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+              title={video.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              controls autoPlay
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+              src={video.url}
+              onEnded={handleComplete}
+            />
           )}
         </div>
-        <div style={{ padding: "14px 20px" }}>
-          <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6 }}>
-            {video.description}
+
+        {/* Footer */}
+        <div style={{
+          padding: "14px 20px", borderTop: "1px solid #F1F5F9", background: "#F8FAFC",
+          display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+        }}>
+          <p style={{ fontSize: 13, color: "#64748B" }}>
+            From: <span style={{ color: B, fontWeight: 600 }}>{video.courseTitle}</span>
           </p>
+          {!watched && (
+            <button
+              onClick={handleComplete}
+              style={{
+                padding: "8px 18px", borderRadius: 9, border: "none",
+                background: "#22C55E", color: "#fff",
+                fontFamily: "inherit", fontWeight: 600, fontSize: 13, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Mark as Watched
+            </button>
+          )}
         </div>
       </motion.div>
     </motion.div>
