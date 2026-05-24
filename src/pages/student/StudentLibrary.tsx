@@ -12,7 +12,6 @@ import {
   LANGUAGE_LABELS,
   extractYouTubeId,
   getYouTubeThumbnail,
-  isYouTubeUrl,
 } from "../../utils/videoData";
 import { isVideoWatched, markVideoWatched } from "../../utils/videoProgress";
 
@@ -491,7 +490,7 @@ function VideoSection({
 }) {
   const navigate = useNavigate();
   const allVideos = getEnrolledVideos(studentEmail);
-
+console.log("activeVideo videos:", activeVideo);
   // Group by subject
   const grouped = allVideos.reduce(
     (acc, v) => {

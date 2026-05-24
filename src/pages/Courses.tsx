@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import {
   getAllCourses,
   enrollStudent,
-  isEnrolled,
+
   getAllEnrollments,
   getSubjectConfig,
   getWatchedCount,

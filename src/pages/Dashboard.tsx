@@ -5,12 +5,10 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   getEnrolledCourses,
-  getAllEnrollments,
   getSubjectConfig,
   getWatchedCount,
 } from "../utils/videoData";
 import { getTotalWatchedCount } from "../utils/videoProgress";
-import { getAllDocuments } from "../db";
 import type { StudentProgress } from "../utils/curriculum";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────

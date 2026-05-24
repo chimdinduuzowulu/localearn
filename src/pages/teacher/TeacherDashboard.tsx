@@ -252,7 +252,7 @@ export default function TeacherDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {myCourses.map((course, i) => {
+                  {myCourses.map((course) => {
                     const cfg = getSubjectConfig(course.subject);
                     const allEnrollments = getAllEnrollments();
                     const studentCount = allEnrollments.filter(e => e.courseId === course.id).length;
