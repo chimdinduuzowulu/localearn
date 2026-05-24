@@ -42,7 +42,7 @@ const FeedBack = () => {
     }
   return (
     <section className='w-full bg-white py:4 md:py-14 p-4 '>
-        <div className='md:max-w-[1100px] m-auto max-w-[400px]'>
+        <div className='md:max-w-[90%] m-auto max-w-[90%] py-10 md:py-0'>
         <h1 className='py-4 text-3xl font-bold'>Students <span className='text-[#00AFEF]'>Feed back</span></h1>
             <p className='text-[#6D737A] py-2'>Over the years, beneficiaries of the Wootlab LanguageLocal has some things to say.</p>
             {/* <Slider {...settings}>

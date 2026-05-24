@@ -1,82 +1,175 @@
-import { VideoModule } from "./videoData";
-interface VideoProgress {
-  videoId: string;
-  watchedAt: number;
-  watchedDuration: number;
-}
+const PROGRESS_KEY = "wl_video_progress";
+const LEGACY_PROGRESS_KEY = "videoProgress";
 
-interface CourseProgress {
+export interface VideoProgressEntry {
+  studentEmail: string;
   courseId: string;
-  videos: VideoProgress[];
-  lastUpdated: number;
+  videoId: string;
+  watchedAt: string; // ISO
 }
 
-export function getVideoProgressKey(userId: string = "default"): string {
-  return `video_progress_${userId}`;
+
+function readAll(): VideoProgressEntry[] {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? (JSON.parse(raw) as VideoProgressEntry[]) : [];
+  } catch {
+    return [];
+  }
 }
 
-export function markVideoWatched(videoId: string, durationWatched: number = 0) {
-  const key = getVideoProgressKey();
-  const stored = localStorage.getItem(key);
-  const progress: CourseProgress[] = stored ? JSON.parse(stored) : [];
-  
+function writeAll(entries: VideoProgressEntry[]): void {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(entries));
+}
 
-  const courseId = videoId.split("_")[0];
-  let courseProgress = progress.find(p => p.courseId === courseId);
+
+function legacyIsWatched(videoId: string): boolean {
+  try {
+    const raw = localStorage.getItem(LEGACY_PROGRESS_KEY);
+    if (!raw) return false;
+    
+    const stored: { courseId: string; videos: { videoId: string }[] }[] =
+      JSON.parse(raw);
+    return stored.some((c) => c.videos.some((v) => v.videoId === videoId));
+  } catch {
+    return false;
+  }
+}
+
+function legacyMarkWatched(videoId: string): void {
+  try {
+    const raw = localStorage.getItem(LEGACY_PROGRESS_KEY);
+    const stored: { courseId: string; videos: { videoId: string }[] }[] = raw
+      ? JSON.parse(raw)
+      : [];
+    // Put under a generic "legacy" course bucket
+    const bucket = stored.find((c) => c.courseId === "__legacy__");
+    if (bucket) {
+      if (!bucket.videos.some((v) => v.videoId === videoId)) {
+        bucket.videos.push({ videoId });
+      }
+    } else {
+      stored.push({ courseId: "__legacy__", videos: [{ videoId }] });
+    }
+    localStorage.setItem(LEGACY_PROGRESS_KEY, JSON.stringify(stored));
+  } catch {
   
-  if (!courseProgress) {
-    courseProgress = { courseId, videos: [], lastUpdated: Date.now() };
-    progress.push(courseProgress);
   }
   
-  const existingVideo = courseProgress.videos.find(v => v.videoId === videoId);
-  if (existingVideo) {
-    existingVideo.watchedAt = Date.now();
-    existingVideo.watchedDuration = Math.max(existingVideo.watchedDuration, durationWatched);
-  } else {
-    courseProgress.videos.push({
+  const all = readAll();
+  const exists = all.some(
+    (e) =>
+      e.videoId === videoId &&
+      e.courseId === "__legacy__" &&
+      e.studentEmail === "__legacy__"
+  );
+  if (!exists) {
+    all.push({
+      studentEmail: "__legacy__",
+      courseId: "__legacy__",
       videoId,
-      watchedAt: Date.now(),
-      watchedDuration: durationWatched,
+      watchedAt: new Date().toISOString(),
     });
+    writeAll(all);
   }
-  
-  courseProgress.lastUpdated = Date.now();
-  localStorage.setItem(key, JSON.stringify(progress));
 }
 
-export function isVideoWatched(videoId: string): boolean {
-  const key = getVideoProgressKey();
-  const stored = localStorage.getItem(key);
-  if (!stored) return false;
-  
-  const progress: CourseProgress[] = JSON.parse(stored);
-  const courseId = videoId.split("_")[0];
-  const courseProgress = progress.find(p => p.courseId === courseId);
-  
-  return courseProgress?.videos.some(v => v.videoId === videoId) || false;
+
+export function markVideoWatched(
+  studentEmailOrVideoId: string,
+  courseIdOrAny?: string | number,
+  videoId?: string
+): void {
+  if (videoId !== undefined && typeof courseIdOrAny === "string") {
+    const all = readAll();
+    const exists = all.some(
+      (e) =>
+        e.studentEmail === studentEmailOrVideoId &&
+        e.courseId === courseIdOrAny &&
+        e.videoId === videoId
+    );
+    if (!exists) {
+      all.push({
+        studentEmail: studentEmailOrVideoId,
+        courseId: courseIdOrAny,
+        videoId,
+        watchedAt: new Date().toISOString(),
+      });
+      writeAll(all);
+    }
+  } else {
+    
+    legacyMarkWatched(studentEmailOrVideoId);
+  }
 }
 
-export function getCourseProgress(videoModules: VideoModule[]): number {
-  if (videoModules.length === 0) return 0;
-  
-  const watchedCount = videoModules.filter(v => isVideoWatched(v.id)).length;
-  return Math.round((watchedCount / videoModules.length) * 100);
+
+export function isVideoWatched(
+  studentEmailOrVideoId: string,
+  courseId?: string,
+  videoId?: string
+): boolean {
+  if (videoId !== undefined && courseId !== undefined) {
+    // New 3-arg call
+    return readAll().some(
+      (e) =>
+        e.studentEmail === studentEmailOrVideoId &&
+        e.courseId === courseId &&
+        e.videoId === videoId
+    );
+  } else {
+    
+    const inNew = readAll().some((e) => e.videoId === studentEmailOrVideoId);
+    const inLegacy = legacyIsWatched(studentEmailOrVideoId);
+    return inNew || inLegacy;
+  }
 }
 
-export function IsCompleted(videoModules: VideoModule[]): boolean {
-  if (videoModules.length === 0) return false;
-  const watchedCount = videoModules.filter(v => isVideoWatched(v.id)).length;
-  return watchedCount === videoModules.length;
+export function getWatchedCount(
+  studentEmail: string,
+  courseId: string
+): number {
+  return readAll().filter(
+    (e) => e.studentEmail === studentEmail && e.courseId === courseId
+  ).length;
 }
 
-export function getWatchedVideosCount(courseId: string): number {
-  const key = getVideoProgressKey();
-  const stored = localStorage.getItem(key);
-  if (!stored) return 0;
-  
-  const progress: CourseProgress[] = JSON.parse(stored);
-  const courseProgress = progress.find(p => p.courseId === courseId);
-  
-  return courseProgress?.videos.length || 0;
+
+export function getCourseProgressPercent(
+  studentEmail: string,
+  courseId: string,
+  totalVideos: number
+): number {
+  if (totalVideos === 0) return 0;
+  const watched = getWatchedCount(studentEmail, courseId);
+  return Math.round((watched / totalVideos) * 100);
+}
+
+
+export function getCourseProgress(
+  videos: { id: string; [key: string]: unknown }[],
+  studentEmail?: string,
+  courseId?: string
+): number {
+  if (videos.length === 0) return 0;
+  let watchedCount: number;
+  if (studentEmail && courseId) {
+    watchedCount = videos.filter((v) =>
+      isVideoWatched(studentEmail, courseId, v.id)
+    ).length;
+  } else {
+    watchedCount = videos.filter((v) => isVideoWatched(v.id)).length;
+  }
+  return Math.round((watchedCount / videos.length) * 100);
+}
+
+export function getTotalWatchedCount(studentEmail: string): number {
+  return readAll().filter((e) => e.studentEmail === studentEmail).length;
+}
+
+
+export function getWatchedEntriesForStudent(
+  studentEmail: string
+): VideoProgressEntry[] {
+  return readAll().filter((e) => e.studentEmail === studentEmail);
 }

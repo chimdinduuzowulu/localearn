@@ -1,165 +1,208 @@
-import React, { useState, useEffect } from "react";
-import { HiSearch, HiBell, HiMenu, HiLogout } from "react-icons/hi";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+
+const IconBell = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+const IconMenu = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
+const IconLogout = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
 
 interface HeaderProps {
-  toggleSideNav: () => void;
-}
-
-interface UserData {
-  signUpData: {
-    fname: string;
-    lname: string;
-    email: string;
-    password: string;
-  };
+  toggleSideNav?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSideNav }) => {
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
-  useEffect(() => {
-    // Get user data from localStorage
-    const userDataString = localStorage.getItem("user");
-    if (userDataString) {
-      try {
-        const parsedData = JSON.parse(userDataString);
-        setUserData(parsedData);
-      } catch (error) {
-        console.error("Error parsing user data from localStorage:", error);
-      }
-    }
-  }, []);
-
-  // Function to generate avatar from initials
-  const getAvatarInitials = (fname: string, lname: string) => {
-    return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
-  };
-
-  const handleSignOut = () => {
-    // Clear user data from localStorage
-    localStorage.removeItem("user");
-    localStorage.removeItem("language");
-    
-    // Close the profile menu
-    setIsProfileMenuOpen(false);
-    
-    // Redirect to login page
-    navigate("/login");
-  };
+  const initials = user
+    ? `${user.fname?.[0] ?? ""}${user.lname?.[0] ?? ""}`.toUpperCase()
+    : "??";
 
   return (
-    <header className="bg-white shadow-sm z-10">
-      <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <button 
-            className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none"
-            onClick={toggleSideNav}
+    <header
+      style={{
+        background: "#fff",
+        borderBottom: "1px solid #E2E8F0",
+        padding: "10px 20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        position: "sticky",
+        top: 0,
+        zIndex: 20,
+      }}
+    >
+      <button
+        onClick={toggleSideNav}
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "#64748B",
+          display: "flex",
+          alignItems: "center",
+          padding: 4,
+        }}
+      >
+        <IconMenu />
+      </button>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Notifications */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}
+            style={{
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              borderRadius: 10,
+              padding: "7px 9px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              color: "#64748B",
+              position: "relative",
+            }}
           >
-            <HiMenu className="w-6 h-6" />
-          </button>
-          
-          <div className="relative ml-4 md:ml-0 md:w-64 lg:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <HiSearch className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              type="text"
-              placeholder="Search for a course"
+            <IconBell />
+            <span
+              style={{
+                position: "absolute",
+                top: 5,
+                right: 5,
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: "#EF4444",
+              }}
             />
-          </div>
+          </button>
+          {notifOpen && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: "calc(100% + 8px)",
+                width: 280,
+                background: "#fff",
+                borderRadius: 14,
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
+                zIndex: 100,
+              }}
+            >
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid #F1F5F9" }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: "#0F172A" }}>Notifications</p>
+              </div>
+              <div style={{ padding: "12px 16px", textAlign: "center" }}>
+                <p style={{ fontSize: 13, color: "#94A3B8" }}>No new notifications</p>
+              </div>
+            </div>
+          )}
         </div>
-        
-        <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              className="p-2 rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none relative"
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+
+        {/* Avatar / profile menu */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "#0EA5E9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: 13,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {initials}
+          </button>
+          {menuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: "calc(100% + 8px)",
+                width: 200,
+                background: "#fff",
+                borderRadius: 14,
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
+                zIndex: 100,
+                overflow: "hidden",
+              }}
             >
-              <HiBell className="w-6 h-6" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
-            </button>
-            
-            {isNotificationsOpen && (
-              <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                <div className="py-2 px-4 border-b border-gray-100">
-                  <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">New course available</p>
-                    <p className="text-sm text-gray-500">Basic Mathematics is now available</p>
-                    <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
-                  </div>
-                  <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">Assignment reminder</p>
-                    <p className="text-sm text-gray-500">Your assignment is due tomorrow</p>
-                    <p className="text-xs text-gray-400 mt-1">1 day ago</p>
-                  </div>
-                </div>
-                <div className="py-2 px-4 border-t border-gray-100">
-                  <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    Mark all as read
-                  </button>
-                </div>
+              <div style={{ padding: "12px 14px", borderBottom: "1px solid #F1F5F9" }}>
+                <p style={{ fontWeight: 600, fontSize: 13, color: "#0F172A" }}>
+                  {user?.fname} {user?.lname}
+                </p>
+                <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{user?.email}</p>
               </div>
-            )}
-          </div>
-          
-          {/* Profile dropdown */}
-          <div className="relative">
-            <button
-              className="flex items-center focus:outline-none"
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            >
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                {userData ? getAvatarInitials(userData.signUpData.fname, userData.signUpData.lname) : "U"}
-              </div>
-            </button>
-            
-            {isProfileMenuOpen && (
-              <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                <div className="py-1">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm text-gray-900">Signed in as</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {userData ? userData.signUpData.email : "user@example.com"}
-                    </p>
-                  </div>
-                  <button 
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => {
-                      navigate("/profile");
-                      setIsProfileMenuOpen(false);
-                    }}
-                  >
-                    Your Profile
-                  </button>
-                  <button 
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => {
-                      navigate("/profile");
-                      setIsProfileMenuOpen(false);
-                    }}
-                  >
-                    Settings
-                  </button>
-                  <button 
-                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100"
-                    onClick={handleSignOut}
-                  >
-                    <HiLogout className="mr-2" />
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              <button
+                onClick={() => { navigate("/profile"); setMenuOpen(false); }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: "none",
+                  border: "none",
+                  textAlign: "left",
+                  fontSize: 13,
+                  color: "#475569",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Your Profile
+              </button>
+              <button
+                onClick={() => { logout(); setMenuOpen(false); }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: "none",
+                  border: "none",
+                  borderTop: "1px solid #F1F5F9",
+                  textAlign: "left",
+                  fontSize: 13,
+                  color: "#EF4444",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <IconLogout /> Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
