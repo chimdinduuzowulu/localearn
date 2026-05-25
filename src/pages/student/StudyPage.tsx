@@ -1668,7 +1668,6 @@ function VideoCardComponent({
   );
 }
 
-// ─── Video Modal Component ───────────────────────────────────────────────────
 function VideoModalComponent({
   video,
   onClose,
