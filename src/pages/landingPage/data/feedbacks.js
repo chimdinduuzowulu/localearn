@@ -5,7 +5,7 @@ export const feedbacks = [
     name: "Aisha Bello",
     title: "Teacher",
     testimony:
-      "Wootlab Foundation has done wonders with our local languages..Thank you for bringing learning down to grassroot.",
+      "Wootlab Foundation has done wonders with our local languages..Thank you for bringing learning down to grassroot. we really appreciate.",
   },
   {
     id: 2,
@@ -13,7 +13,7 @@ export const feedbacks = [
     name: "Olatunji Samuel",
     title: "Student",
     testimony:
-      "At first, learning to use a computer was really tough. But with daily practice, it became simple. I've now mastered Microsoft Word and Excel. The fear I used to have is completely gone. Thank you to WootlabLab for this opportunity!",
+      "At first, learning to use a computer was really tough. But with daily practice, it became simple.  Thank you to WootlabLab for this opportunity!",
   },
   {
     id: 3,
