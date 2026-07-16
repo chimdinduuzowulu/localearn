@@ -53,11 +53,11 @@ const Navigate = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="flex justify-center"
         >
-          <img
+          {/* <img
             src={Achieve}
             alt="App navigation demonstration"
             className="w-full max-w-md rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-500"
-          />
+          /> */}
         </motion.div>
       </div>
     </section>
