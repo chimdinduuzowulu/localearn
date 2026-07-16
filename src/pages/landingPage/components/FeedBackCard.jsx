@@ -7,7 +7,7 @@ const FeedBackCard = ({ name, title, testimony, img }) => {
     <div className="bg-white p-8 border shadow-sm my-8 mx-2">
       <div className="flex justify-between">
         <div className="flex gap-4">
-          <img src={img} alt="feedback" className=''  />
+          <img src={img} alt="feedback" className="w-12 h-12 rounded-full object-cover shrink-0"   />
           <div>
             <h1>{name}</h1>
             <p>{title}</p>
