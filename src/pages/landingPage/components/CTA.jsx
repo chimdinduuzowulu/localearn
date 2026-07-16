@@ -1,5 +1,5 @@
 import React from 'react'
-import cta from '../assets/arcp-1.png'
+import cta from '../assets/AT 1 (1).jpg'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router'
 
