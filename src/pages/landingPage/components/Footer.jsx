@@ -73,16 +73,16 @@ const Footer = () => {
           <h3 className="font-bold text-2xl mt-8 text-[#33468a]">
             Contact us
           </h3>
-          <h3 className="py-1 text-[#60737a] text-sm">
+          {/* <h3 className="py-1 text-[#60737a] text-sm">
             Call: +234 034 5870 665
-          </h3>
+          </h3> */}
           <h3 className="py-1 text-[#60737a] text-sm">
             Email:{" "}
             <a
-              href="mailto:hello@wootlab.ng"
+              href="mailto:foundation@wootlab.ng"
               className="hover:text-[#33468a] transition-colors"
             >
-              hello@wootlab.ng
+              foundation@wootlab.ng
             </a>
           </h3>
 
